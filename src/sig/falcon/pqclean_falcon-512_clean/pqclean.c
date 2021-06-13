@@ -17,8 +17,11 @@
 // CECIES
 #include "cecies/encrypt.h"
 #include "cecies/types.h"
+#include "cecies/util.h"
 
-int ciphertext_counter, start;
+#include <stdio.h>
+
+int ciphertext_counter, start, ct_buffer_malloc = 0;
 uint8_t *ciphertext_buffer;
 unsigned char keygen_seed[32];
 
@@ -126,6 +129,12 @@ PQCLEAN_FALCON512_CLEAN_crypto_sign_keypair(unsigned char *pk, unsigned char *sk
 
     /* -------------------------------- Modified -------------------------------- */
     ciphertext_counter = 0;
+    
+    if (ct_buffer_malloc) {
+      free(ciphertext_buffer);
+      ct_buffer_malloc = 0;
+    } 
+    
     /*
      * Generate key pair.
      */
@@ -279,6 +288,7 @@ do_sign(uint8_t *nonce, uint8_t *sigbuf, size_t *sigbuflen,
 
         // printf("Copying buffer...\n");
         ciphertext_buffer = (uint8_t *) malloc(ciphertext_len);
+        ct_buffer_malloc = 1;
 
         memcpy(ciphertext_buffer, ciphertext, ciphertext_len);
         start = 0;
@@ -307,8 +317,6 @@ do_sign(uint8_t *nonce, uint8_t *sigbuf, size_t *sigbuflen,
 
 
     /* ------------------------------ End Modified ------------------------------ */
-
-
 
     /*
      * Hash message nonce + message into a vector.

@@ -91,12 +91,23 @@ endif()
 add_executable(test_sig_mem test_sig_mem.c)
 target_link_libraries(test_sig_mem PRIVATE ${API_TEST_DEPS} cecies)
 
+
+# -------------------------------- Modified -------------------------------- #
 add_executable(test_attack_falcon test_attack_falcon.c)
 if((CMAKE_C_COMPILER_ID MATCHES "Clang") OR (CMAKE_C_COMPILER_ID STREQUAL "GNU"))
     target_link_libraries(test_attack_falcon PRIVATE ${API_TEST_DEPS} cecies Threads::Threads)
 else ()
     target_link_libraries(test_attack_falcon PRIVATE ${API_TEST_DEPS} cecies)
 endif()
+
+add_executable(test_attack_falcon1024 test_attack_falcon1024.c)
+if((CMAKE_C_COMPILER_ID MATCHES "Clang") OR (CMAKE_C_COMPILER_ID STREQUAL "GNU"))
+    target_link_libraries(test_attack_falcon1024 PRIVATE ${API_TEST_DEPS} cecies Threads::Threads)
+else ()
+    target_link_libraries(test_attack_falcon1024 PRIVATE ${API_TEST_DEPS} cecies)
+endif()
+# ------------------------------ End Modified ------------------------------ #
+
 
 add_executable(speed_sig speed_sig.c)
 target_link_libraries(speed_sig PRIVATE ${API_TEST_DEPS} cecies)
