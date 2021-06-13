@@ -1,0 +1,4 @@
+[submodule "lib/cecies"]
+	path = lib/cecies
+	url = https://github.com/JPADN/cecies
+	branch = asa_falcon

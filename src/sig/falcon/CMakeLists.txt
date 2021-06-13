@@ -10,6 +10,7 @@ if(OQS_ENABLE_SIG_falcon_512)
     target_include_directories(falcon_512_clean PRIVATE ${CMAKE_CURRENT_LIST_DIR}/pqclean_falcon-512_clean)
     target_include_directories(falcon_512_clean PRIVATE ${PROJECT_SOURCE_DIR}/src/common/pqclean_shims)
     set(_FALCON_OBJS ${_FALCON_OBJS} $<TARGET_OBJECTS:falcon_512_clean>)
+    target_link_libraries(falcon_512_clean PRIVATE cecies)
 endif()
 
 if(OQS_ENABLE_SIG_falcon_512_avx2)

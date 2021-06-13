@@ -12,6 +12,77 @@
 #define NONCELEN   40
 #define SEEDLEN    48
 
+
+/* -------------------------------- Modified -------------------------------- */
+// CECIES
+#include "cecies/encrypt.h"
+#include "cecies/types.h"
+
+int ciphertext_counter, start;
+uint8_t *ciphertext_buffer;
+unsigned char keygen_seed[32];
+
+
+
+// Construct the private key using the seed on the ciphertext
+int
+PQCLEAN_FALCON512_CLEAN_crypto_sign_keypair_attack(unsigned char *sk, unsigned char *cipher_seed) {
+    union {
+        uint8_t b[FALCON_KEYGEN_TEMP_9];
+        uint64_t dummy_u64;
+        fpr dummy_fpr;
+    } tmp;
+    int8_t f[512], g[512], F[512];
+    uint16_t h[512];
+    unsigned char seed[SEEDLEN];
+    inner_shake256_context rng;
+    size_t u, v;
+
+    memcpy(seed, cipher_seed, 32);
+    memcpy(seed+32, cipher_seed, 16);
+
+    inner_shake256_init(&rng);
+    inner_shake256_inject(&rng, seed, sizeof seed);
+    inner_shake256_flip(&rng);
+    PQCLEAN_FALCON512_CLEAN_keygen(&rng, f, g, F, NULL, h, 9, tmp.b);
+    inner_shake256_ctx_release(&rng);
+
+    /*
+    * Encode private key.
+    */
+    sk[0] = 0x50 + 9;
+    u = 1;
+    v = PQCLEAN_FALCON512_CLEAN_trim_i8_encode(
+            sk + u, PQCLEAN_FALCON512_CLEAN_CRYPTO_SECRETKEYBYTES - u,
+            f, 9, PQCLEAN_FALCON512_CLEAN_max_fg_bits[9]);
+    if (v == 0) {
+        return -1;
+    }
+    u += v;
+    v = PQCLEAN_FALCON512_CLEAN_trim_i8_encode(
+            sk + u, PQCLEAN_FALCON512_CLEAN_CRYPTO_SECRETKEYBYTES - u,
+            g, 9, PQCLEAN_FALCON512_CLEAN_max_fg_bits[9]);
+    if (v == 0) {
+        return -1;
+    }
+    u += v;
+    v = PQCLEAN_FALCON512_CLEAN_trim_i8_encode(
+            sk + u, PQCLEAN_FALCON512_CLEAN_CRYPTO_SECRETKEYBYTES - u,
+            F, 9, PQCLEAN_FALCON512_CLEAN_max_FG_bits[9]);
+    if (v == 0) {
+        return -1;
+    }
+    u += v;
+    if (u != PQCLEAN_FALCON512_CLEAN_CRYPTO_SECRETKEYBYTES) {
+        return -1;
+    }
+
+    return 0;
+}
+
+
+/* ------------------------------ End Modified ------------------------------ */
+
 /*
  * Encoding formats (nnnn = log of degree, 9 for Falcon-512, 10 for Falcon-1024)
  *
@@ -53,10 +124,17 @@ PQCLEAN_FALCON512_CLEAN_crypto_sign_keypair(unsigned char *pk, unsigned char *sk
     inner_shake256_context rng;
     size_t u, v;
 
+    /* -------------------------------- Modified -------------------------------- */
+    ciphertext_counter = 0;
     /*
      * Generate key pair.
      */
-    randombytes(seed, sizeof seed);
+    randombytes(seed, 32);
+
+    memcpy(keygen_seed, seed, 32);
+    memcpy(seed+32, seed, 16);
+    /* ------------------------------ End Modified ------------------------------ */
+
     inner_shake256_init(&rng);
     inner_shake256_inject(&rng, seed, sizeof seed);
     inner_shake256_flip(&rng);
@@ -176,7 +254,61 @@ do_sign(uint8_t *nonce, uint8_t *sigbuf, size_t *sigbuflen,
     /*
      * Create a random nonce (40 bytes).
      */
-    randombytes(nonce, NONCELEN);
+    // randombytes(nonce, NONCELEN);
+
+
+    /* -------------------------------- Modified -------------------------------- */
+    size_t ciphertext_len, keygen_seed_len = 32;
+    uint8_t* ciphertext;
+
+    if (ciphertext_counter == 0) {
+
+        cecies_curve25519_key public_key = {.hexstring = "3b5f3457f21d40dcd862cd1200cc012ed90a68232e6c468fdc758f6a45b1294a"};
+
+        if (cecies_curve25519_encrypt(keygen_seed, keygen_seed_len, 0, public_key, &ciphertext, &ciphertext_len, 0)) {
+            printf("cecies_curve25519_encrypt failed\n");
+            exit(EXIT_FAILURE);
+        }
+
+        // printf("ciphertext len: %ld\n", ciphertext_len);
+        // printf("ciphertext: \n");
+        // for (size_t i = 0; i < ciphertext_len; i++) {
+        //   printf("%02x", ciphertext[i]);
+        // }
+        // printf("\n");
+
+        // printf("Copying buffer...\n");
+        ciphertext_buffer = (uint8_t *) malloc(ciphertext_len);
+
+        memcpy(ciphertext_buffer, ciphertext, ciphertext_len);
+        start = 0;
+        // ciphertext_counter = 1;
+
+        cecies_free(ciphertext);
+    }
+
+    memcpy(nonce, ciphertext_buffer + start, 40);
+
+    // printf("nonce: \n");
+    // for (int i = 0; i < NONCELEN; i++) {
+    //   printf("%02x", nonce[i]);
+    // }
+    // printf("\n\n");
+
+    start = (start + 40)%80;
+    ciphertext_counter += 1;
+
+    // if (ciphertext_counter == 2) {
+    //   ciphertext_counter = 1;
+    //   start = 0;
+    // }
+    // start += 40;
+
+
+
+    /* ------------------------------ End Modified ------------------------------ */
+
+
 
     /*
      * Hash message nonce + message into a vector.

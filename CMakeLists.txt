@@ -120,6 +120,7 @@ set(PUBLIC_HEADERS ${PUBLIC_HEADERS} ${PROJECT_BINARY_DIR}/include/oqs/oqsconfig
 
 include_directories(${PROJECT_BINARY_DIR}/include)
 add_subdirectory(src)
+add_subdirectory(lib/cecies)
 
 if(NOT OQS_BUILD_ONLY_LIB)
     add_subdirectory(tests)

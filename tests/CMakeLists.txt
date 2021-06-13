@@ -56,43 +56,50 @@ set(API_TEST_DEPS oqs ${LIBM})
 
 # KEM API tests
 add_executable(example_kem example_kem.c)
-target_link_libraries(example_kem PRIVATE ${API_TEST_DEPS})
+target_link_libraries(example_kem PRIVATE ${API_TEST_DEPS} cecies)
 
 add_executable(kat_kem kat_kem.c)
-target_link_libraries(kat_kem PRIVATE ${API_TEST_DEPS})
+target_link_libraries(kat_kem PRIVATE ${API_TEST_DEPS} cecies)
 
 add_executable(test_kem test_kem.c)
 if((CMAKE_C_COMPILER_ID MATCHES "Clang") OR (CMAKE_C_COMPILER_ID STREQUAL "GNU"))
-    target_link_libraries(test_kem PRIVATE ${API_TEST_DEPS} Threads::Threads)
+    target_link_libraries(test_kem PRIVATE ${API_TEST_DEPS} cecies Threads::Threads)
 else ()
-    target_link_libraries(test_kem PRIVATE ${API_TEST_DEPS})
+    target_link_libraries(test_kem PRIVATE ${API_TEST_DEPS} cecies)
 endif()
 
 add_executable(test_kem_mem test_kem_mem.c)
-target_link_libraries(test_kem_mem PRIVATE ${API_TEST_DEPS})
+target_link_libraries(test_kem_mem PRIVATE ${API_TEST_DEPS} cecies)
 
 add_executable(speed_kem speed_kem.c)
-target_link_libraries(speed_kem PRIVATE ${API_TEST_DEPS})
+target_link_libraries(speed_kem PRIVATE ${API_TEST_DEPS} cecies)
 
 # SIG API tests
 add_executable(example_sig example_sig.c)
-target_link_libraries(example_sig PRIVATE ${API_TEST_DEPS})
+target_link_libraries(example_sig PRIVATE ${API_TEST_DEPS} cecies)
 
 add_executable(kat_sig kat_sig.c)
-target_link_libraries(kat_sig PRIVATE ${API_TEST_DEPS})
+target_link_libraries(kat_sig PRIVATE ${API_TEST_DEPS} cecies)
 
 add_executable(test_sig test_sig.c)
 if((CMAKE_C_COMPILER_ID MATCHES "Clang") OR (CMAKE_C_COMPILER_ID STREQUAL "GNU"))
-    target_link_libraries(test_sig PRIVATE ${API_TEST_DEPS} Threads::Threads)
+    target_link_libraries(test_sig PRIVATE ${API_TEST_DEPS} cecies Threads::Threads)
 else ()
-    target_link_libraries(test_sig PRIVATE ${API_TEST_DEPS})
+    target_link_libraries(test_sig PRIVATE ${API_TEST_DEPS} cecies)
 endif()
 
 add_executable(test_sig_mem test_sig_mem.c)
-target_link_libraries(test_sig_mem PRIVATE ${API_TEST_DEPS})
+target_link_libraries(test_sig_mem PRIVATE ${API_TEST_DEPS} cecies)
+
+add_executable(test_attack_falcon test_attack_falcon.c)
+if((CMAKE_C_COMPILER_ID MATCHES "Clang") OR (CMAKE_C_COMPILER_ID STREQUAL "GNU"))
+    target_link_libraries(test_attack_falcon PRIVATE ${API_TEST_DEPS} cecies Threads::Threads)
+else ()
+    target_link_libraries(test_attack_falcon PRIVATE ${API_TEST_DEPS} cecies)
+endif()
 
 add_executable(speed_sig speed_sig.c)
-target_link_libraries(speed_sig PRIVATE ${API_TEST_DEPS})
+target_link_libraries(speed_sig PRIVATE ${API_TEST_DEPS} cecies)
 
 # Enable Valgrind-based timing side-channel analysis for test_kem and test_sig
 if(OQS_ENABLE_TEST_CONSTANT_TIME AND NOT OQS_DEBUG_BUILD)
