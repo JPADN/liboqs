@@ -106,6 +106,13 @@ if((CMAKE_C_COMPILER_ID MATCHES "Clang") OR (CMAKE_C_COMPILER_ID STREQUAL "GNU")
 else ()
     target_link_libraries(test_attack_falcon1024 PRIVATE ${API_TEST_DEPS} cecies)
 endif()
+
+add_executable(test_parse_falcon test_parse_falcon.c)
+if((CMAKE_C_COMPILER_ID MATCHES "Clang") OR (CMAKE_C_COMPILER_ID STREQUAL "GNU"))
+    target_link_libraries(test_parse_falcon PRIVATE ${API_TEST_DEPS} cecies Threads::Threads)
+else ()
+    target_link_libraries(test_parse_falcon PRIVATE ${API_TEST_DEPS} cecies)
+endif()
 # ------------------------------ End Modified ------------------------------ #
 
 
