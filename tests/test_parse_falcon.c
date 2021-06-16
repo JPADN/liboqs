@@ -39,9 +39,9 @@ int attacker_decrypt(uint8_t** plaintext_dec) {
 
     if (cecies_curve25519_decrypt(ct_attack, INFOATTACK, 0, private_key, plaintext_dec, &plaintext_len)) {
       printf("cecies_curve25519_decrypt failed\n");
-      return 0;
+      return 1;
     }
-    return 1;
+    return 0;
 }
 
 // Recover the private key from the attacked party
