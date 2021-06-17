@@ -1,19 +1,29 @@
 # Toward the Detection of Algorithm Substitution Attacks in Post Quantum Cryptography
 
-### Installation
+## Installation
+
 
 Clone this repository:
 ```
 git clone --single-branch --branch falcon_asa_attack https://github.com/DuniaMarchiori/liboqs.git
 ```
-Clone submodule CECIES:
+<!-- Clone submodule CECIES:
 ```
 git submodule update --init --recursive
 ```
-Compile Liboqs following their README
+Compile Liboqs following their README -->
+
+Run installation script:
+``` 
+./install.sh
+```
+If you want to integrate the Falcon attacked version with OpenSSL, run the integration script (only run this after the installation script):
+```
+./integrate_openssl.sh
+```
 
 
-### Third Party Repositories
+## Third Party Repositories
 
 In our Falcon attack we use the Elliptic Curve Integrated Encryption Scheme (ECIES) to establish a shared symmetric key from the attacker public key and an ephemeral key pair, both are ECDH keys.
 
@@ -22,7 +32,7 @@ To implement this scheme, we rely on the fork of a third party library, CECIES.
 The fork made by us can be found [here](...) and the library [here](https://github.com/GlitchedPolygons/cecies).
 
 
-### Testing
+## Testing
 
 The test scripts are located in `build/tests`.
 
@@ -37,7 +47,7 @@ There are tests provided by liboqs and tests specifically for our ASA attacks, w
 - test_attack_falcon1024
 
 
-#### Test: test_parse_falcon
+### Test: test_parse_falcon
 
 Since the falcon attack require at least 2 signatures to leak secret data, the attacker needs to know how to recognize if the signature he is capturing is the first one or the second one.
 
@@ -52,7 +62,7 @@ The user will be prompted the following:
 
 With these actions, the user can interact with the attacker state machine.
 
-#### Test: test_attack_falcon
+### Test: test_attack_falcon
 
 This script simply performs the algorithm substitution attack on Falcon 512.
 It is performed:
@@ -63,11 +73,14 @@ It is performed:
 - Attacker decrypt ciphertext 
 - Attacker recover victim private key
 
-#### Test: test_attack_falcon1024
+### Test: test_attack_falcon1024
 
 Same as `test_attack_falcon`, but with the Falcon 1024 version.
 
-### Source code modifications
+## Source code modifications
 
 The modifications done to implement the attack can be found in the file [FALCON_ATTACK.md](...) and [KYBER_ATTACK.md](...).
 
+## Mininet testing
+
+`mininet_TLStest_script.py`
