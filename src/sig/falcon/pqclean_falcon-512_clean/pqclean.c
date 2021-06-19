@@ -8,7 +8,6 @@
  */
 
 
-
 #define NONCELEN   40
 #define SEEDLEN    48
 
