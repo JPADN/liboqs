@@ -1,7 +1,10 @@
-# Toward the Detection of Algorithm Substitution Attacks in Post Quantum Cryptography
+# Timing Analysis of Algorithm Substitution Attacks in a Post-Quantum TLS Protocol
+
+## Overview
+
+This repository implements Algorithm Substitution Attacks on Kyber and Falcon. It purpose is to evaluate academic research, thus it is not recommended to be used in a production environment. **Use it at your own risk**.
 
 ## Installation
-
 
 Clone this repository:
 ```
@@ -12,7 +15,7 @@ Run installation script:
 ``` 
 ./install.sh
 ```
-If you want to integrate the Falcon attacked version with OpenSSL, run the integration script (only run this after the installation script):
+If you want to integrate the Falcon attacked version with [OQS-OpenSSL](https://github.com/open-quantum-safe/openssl), run the integration script (only run this after the installation script):
 ```
 ./integrate_openssl.sh
 ```
@@ -59,11 +62,11 @@ With these actions, the user can interact with the attacker state machine.
 
 ### Test: test_attack_falcon
 
-This script simply performs the algorithm substitution attack on Falcon 512.
+This script simply performs the algorithm substitution attack on Falcon 512
 It is performed:
-- Victim generated a keypair
+- Victim generates a keypair
 - Victim signs 2 times
-- Attacker capture both signatures
+- Attacker captures both signatures
 - Attacker parse ciphertext from the signature
 - Attacker decrypt ciphertext 
 - Attacker recover victim private key
@@ -71,6 +74,21 @@ It is performed:
 ### Test: test_attack_falcon1024
 
 Same as `test_attack_falcon`, but with the Falcon 1024 version.
+
+## Attacks
+
+### Falcon ASA flow
+
+- Victim generates a keypair from a random secret seed
+- The malicious implementation will perform an ECIES key establishment with the attacker public key and an ephemeral key pair. Afterwards it will:
+    - Encrypt the seed with the key derived from the ECIES shared secret
+    - Inject the ciphertext on the victim's signatures
+- The attacker will capture two consecutive signatures, and then:
+    - Recover the ciphertext 
+    - Decrypt the ciphertext, recovering the seed
+    - Compute the victim's private key from the secret seed
+
+
 
 ## Mininet testing
 
