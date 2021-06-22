@@ -5,13 +5,8 @@
 
 Clone this repository:
 ```
-git clone --single-branch --branch falcon_asa_attack https://github.com/DuniaMarchiori/liboqs.git
+git clone --single-branch --branch falcon_asa_attack [removed for anonimity]
 ```
-<!-- Clone submodule CECIES:
-```
-git submodule update --init --recursive
-```
-Compile Liboqs following their README -->
 
 Run installation script:
 ``` 
@@ -29,7 +24,7 @@ In our Falcon attack we use the Elliptic Curve Integrated Encryption Scheme (ECI
 
 To implement this scheme, we rely on the fork of a third party library, CECIES. 
 
-The fork made by us can be found [here](...) and the library [here](https://github.com/GlitchedPolygons/cecies).
+The fork made by us can be found here(link removed for anonimity) and the library [here](https://github.com/GlitchedPolygons/cecies).
 
 
 ## Testing
@@ -76,10 +71,6 @@ It is performed:
 ### Test: test_attack_falcon1024
 
 Same as `test_attack_falcon`, but with the Falcon 1024 version.
-
-## Source code modifications
-
-The modifications done to implement the attack can be found in the file [FALCON_ATTACK.md](...) and [KYBER_ATTACK.md](...).
 
 ## Mininet testing
 
