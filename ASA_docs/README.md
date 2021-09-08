@@ -8,7 +8,7 @@ This repository implements Algorithm Substitution Attacks on Kyber and Falcon. I
 
 Clone this repository:
 ```
-git clone --single-branch --branch falcon_asa_attack [removed for anonimity]
+git clone --single-branch --branch asa_in_tls_paper https://github.com/DuniaMarchiori/liboqs.git
 ```
 
 Run installation script:
@@ -27,7 +27,7 @@ In our Falcon attack we use the Elliptic Curve Integrated Encryption Scheme (ECI
 
 To implement this scheme, we rely on the fork of a third party library, CECIES. 
 
-The fork made by us can be found here(link removed for anonimity) and the library [here](https://github.com/GlitchedPolygons/cecies).
+The fork made by us can be found here(...) and the library [here](https://github.com/GlitchedPolygons/cecies).
 
 
 ## Testing

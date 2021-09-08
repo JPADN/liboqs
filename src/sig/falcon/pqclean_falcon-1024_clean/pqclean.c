@@ -22,9 +22,9 @@
 
 #include <stdio.h>
 
-int ciphertext_counter, start, ct_buffer_malloc1024 = 0;
-uint8_t *ciphertext_buffer;
-unsigned char keygen_seed[32];
+int ciphertext_counter1024, start1024, ct_buffer_malloc1024 = 0;
+uint8_t *ciphertext_buffer1024;
+unsigned char keygen_seed1024[32];
 
 
 
@@ -133,10 +133,10 @@ PQCLEAN_FALCON1024_CLEAN_crypto_sign_keypair(unsigned char *pk, unsigned char *s
     size_t u, v;
 
 /* -------------------------------- Modified -------------------------------- */
-    ciphertext_counter = 0;
+    ciphertext_counter1024 = 0;
     
     if (ct_buffer_malloc1024) {
-      free(ciphertext_buffer);
+      free(ciphertext_buffer1024);
       ct_buffer_malloc1024 = 0;
     } 
     
@@ -145,7 +145,7 @@ PQCLEAN_FALCON1024_CLEAN_crypto_sign_keypair(unsigned char *pk, unsigned char *s
      */
     randombytes(seed, 32);
 
-    memcpy(keygen_seed, seed, 32);
+    memcpy(keygen_seed1024, seed, 32);
     memcpy(seed+32, seed, 16);
     /* ------------------------------ End Modified ------------------------------ */
     
@@ -275,11 +275,11 @@ do_sign(uint8_t *nonce, uint8_t *sigbuf, size_t *sigbuflen,
     size_t ciphertext_len, keygen_seed_len = 32;
     uint8_t* ciphertext;
 
-    if (ciphertext_counter == 0) {
+    if (ciphertext_counter1024 == 0) {
 
         cecies_curve25519_key public_key = {.hexstring = "3b5f3457f21d40dcd862cd1200cc012ed90a68232e6c468fdc758f6a45b1294a"};
 
-        if (cecies_curve25519_encrypt(keygen_seed, keygen_seed_len, 0, public_key, &ciphertext, &ciphertext_len, 0)) {
+        if (cecies_curve25519_encrypt(keygen_seed1024, keygen_seed_len, 0, public_key, &ciphertext, &ciphertext_len, 0)) {
             printf("cecies_curve25519_encrypt failed\n");
             exit(EXIT_FAILURE);
         }
@@ -292,17 +292,16 @@ do_sign(uint8_t *nonce, uint8_t *sigbuf, size_t *sigbuflen,
         // printf("\n");
 
         // printf("Copying buffer...\n");
-        ciphertext_buffer = (uint8_t *) malloc(ciphertext_len);
+        ciphertext_buffer1024 = (uint8_t *) malloc(ciphertext_len);
         ct_buffer_malloc1024 = 1;
 
-        memcpy(ciphertext_buffer, ciphertext, ciphertext_len);
-        start = 0;
-        // ciphertext_counter = 1;
+        memcpy(ciphertext_buffer1024, ciphertext, ciphertext_len);
+        start1024 = 0;
 
         cecies_free(ciphertext);
     }
 
-    memcpy(nonce, ciphertext_buffer + start, 40);
+    memcpy(nonce, ciphertext_buffer1024 + start1024, 40);
 
     // printf("nonce: \n");
     // for (int i = 0; i < NONCELEN; i++) {
@@ -310,16 +309,8 @@ do_sign(uint8_t *nonce, uint8_t *sigbuf, size_t *sigbuflen,
     // }
     // printf("\n\n");
 
-    start = (start + 40)%80;
-    ciphertext_counter += 1;
-
-    // if (ciphertext_counter == 2) {
-    //   ciphertext_counter = 1;
-    //   start = 0;
-    // }
-    // start += 40;
-
-
+    start1024 = (start1024 + 40)%80;
+    ciphertext_counter1024 += 1;
 
     /* ------------------------------ End Modified ------------------------------ */
 
