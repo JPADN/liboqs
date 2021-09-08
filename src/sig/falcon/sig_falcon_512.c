@@ -1,5 +1,8 @@
 // SPDX-License-Identifier: MIT
 
+// ASA comment: In this file we commented the AVX2 function calls, so when we test the ASA in openssl
+// it will run using the 'clean' version.
+
 #include <stdlib.h>
 
 #include <oqs/sig_falcon.h>
@@ -45,7 +48,8 @@ OQS_API OQS_STATUS OQS_SIG_falcon_512_keypair(uint8_t *public_key, uint8_t *secr
 	OQS_CPU_EXTENSIONS available_cpu_extensions = OQS_get_available_CPU_extensions();
 	if (available_cpu_extensions.AVX2_ENABLED) {
 #endif /* OQS_PORTABLE_BUILD */
-		return (OQS_STATUS) PQCLEAN_FALCON512_AVX2_crypto_sign_keypair(public_key, secret_key);
+		// return (OQS_STATUS) PQCLEAN_FALCON512_AVX2_crypto_sign_keypair(public_key, secret_key);
+        return (OQS_STATUS) PQCLEAN_FALCON512_CLEAN_crypto_sign_keypair(public_key, secret_key);
 #if defined(OQS_PORTABLE_BUILD)
 	} else {
 		return (OQS_STATUS) PQCLEAN_FALCON512_CLEAN_crypto_sign_keypair(public_key, secret_key);
@@ -62,7 +66,8 @@ OQS_API OQS_STATUS OQS_SIG_falcon_512_sign(uint8_t *signature, size_t *signature
 	OQS_CPU_EXTENSIONS available_cpu_extensions = OQS_get_available_CPU_extensions();
 	if (available_cpu_extensions.AVX2_ENABLED) {
 #endif /* OQS_PORTABLE_BUILD */
-		return (OQS_STATUS) PQCLEAN_FALCON512_AVX2_crypto_sign_signature(signature, signature_len, message, message_len, secret_key);
+		// return (OQS_STATUS) PQCLEAN_FALCON512_AVX2_crypto_sign_signature(signature, signature_len, message, message_len, secret_key);
+        return (OQS_STATUS) PQCLEAN_FALCON512_CLEAN_crypto_sign_signature(signature, signature_len, message, message_len, secret_key);
 #if defined(OQS_PORTABLE_BUILD)
 	} else {
 		return (OQS_STATUS) PQCLEAN_FALCON512_CLEAN_crypto_sign_signature(signature, signature_len, message, message_len, secret_key);
@@ -79,7 +84,8 @@ OQS_API OQS_STATUS OQS_SIG_falcon_512_verify(const uint8_t *message, size_t mess
 	OQS_CPU_EXTENSIONS available_cpu_extensions = OQS_get_available_CPU_extensions();
 	if (available_cpu_extensions.AVX2_ENABLED) {
 #endif /* OQS_PORTABLE_BUILD */
-		return (OQS_STATUS) PQCLEAN_FALCON512_AVX2_crypto_sign_verify(signature, signature_len, message, message_len, public_key);
+		// return (OQS_STATUS) PQCLEAN_FALCON512_AVX2_crypto_sign_verify(signature, signature_len, message, message_len, public_key);
+        return (OQS_STATUS) PQCLEAN_FALCON512_CLEAN_crypto_sign_verify(signature, signature_len, message, message_len, public_key);
 #if defined(OQS_PORTABLE_BUILD)
 	} else {
 		return (OQS_STATUS) PQCLEAN_FALCON512_CLEAN_crypto_sign_verify(signature, signature_len, message, message_len, public_key);

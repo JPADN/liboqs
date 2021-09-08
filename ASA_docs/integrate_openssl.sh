@@ -5,11 +5,8 @@ cd ..
 LIBOQS_DIR=$PWD
 CECIES_DIR=${LIBOQS_DIR}/lib/cecies
 
-
-#echo -e "Where should I install OQS-OpenSSL (absolute path):\n"
-#read OPENSSL_DIR
-OPENSSL_DIR=/home/jpadn/projects/labsec/testes/openssl
-
+echo -e "Where should I install OQS-OpenSSL (absolute path):\n"
+read OPENSSL_DIR
 
 # ---------------------------------- OPENSSL --------------------------------- #
 
