@@ -20,6 +20,10 @@ If you want to integrate the Falcon attacked version with [OQS-OpenSSL](https://
 ./integrate_openssl.sh
 ```
 
+### Individual branches
+
+This branch contains the implementation of our two algorithm substitution attacks. The Falcon attack can be found individually in the branch `falcon_asa_attack` and the Kyber attack can be found in `kyber_asa_attack`.
+
 
 ## Third Party Repositories
 
@@ -87,6 +91,12 @@ Same as `test_attack_falcon`, but with the Falcon 1024 version.
     - Recover the ciphertext 
     - Decrypt the ciphertext, recovering the seed
     - Compute the victim's private key from the secret seed
+
+### Kyber ASA flow
+- Victim generates a keypair from a random secret seed
+	- The malicious implementation adds information about the secret seed into the public key. The information is encrypted using
+	the attacker's symmetric key
+- The attacker can recover the secret seed from the public key and reconstruct the private key
 
 
 ## Mininet testing
