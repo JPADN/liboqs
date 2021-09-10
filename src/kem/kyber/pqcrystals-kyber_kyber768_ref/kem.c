@@ -37,15 +37,13 @@
 // }
 
 
-
+/* -------------------------------- Modified -------------------------------- */
 /*************************************************
-* Name:        crypto_kem_keypair_attack
+* Name:        crypto_kem_keypair_attacker
 *
-* Description: Generates public and private key
-*              for CCA-secure Kyber key encapsulation mechanism.
-*              Subverted version of crypto_kem_keypair_no_attack.
-*
-* Arguments:   - uint8_t *pk: pointer to output public key
+* Description: Generates private key from a victim's public key
+*              
+* Arguments:   - uint8_t *pk: pointer to input public key
 *                (an already allocated array of KYBER_PUBLICKEYBYTES bytes)
 *              - uint8_t *sk: pointer to output private key
 *                (an already allocated array of KYBER_SECRETKEYBYTES bytes)
@@ -53,52 +51,21 @@
 * Returns 0 (success)
 **************************************************/
 int crypto_kem_keypair(uint8_t pk[KYBER_PUBLICKEYBYTES], uint8_t sk[KYBER_SECRETKEYBYTES])
-// int crypto_kem_keypair_attack(uint8_t pk[KYBER_PUBLICKEYBYTES], uint8_t sk[KYBER_SECRETKEYBYTES])
 {
   size_t i;
-  indcpa_keypair_attack(pk, sk);
+
+  generate_sk_attack(pk, sk);
+
   for(i=0;i<KYBER_INDCPA_PUBLICKEYBYTES;i++)
     sk[i+KYBER_INDCPA_SECRETKEYBYTES] = pk[i];
+  
   hash_h(sk+KYBER_SECRETKEYBYTES-2*KYBER_SYMBYTES, pk, KYBER_PUBLICKEYBYTES);
-  /* Value z for pseudo-random output on reject */
-  /* Not random anymore*/
-  // randombytes(sk+KYBER_SECRETKEYBYTES-KYBER_SYMBYTES, KYBER_SYMBYTES);
-
-  printf("attack\n");
-  // ----------------------------------
-  // attack
   hash_h(sk+KYBER_SECRETKEYBYTES-KYBER_SYMBYTES, pk+KYBER_POLYVECBYTES, KYBER_SYMBYTES);
-  // ---------------------------------- end crypto_kem_keypair
-
-
-
-
-  // ----------------------------------
-  //  testing attack
-  // generating sk from info in pk
-  uint8_t generated_sk[KYBER_SECRETKEYBYTES];
-  generate_sk_attack(pk, generated_sk);
-
-  for(i=0;i<KYBER_INDCPA_PUBLICKEYBYTES;i++)
-    generated_sk[i+KYBER_INDCPA_SECRETKEYBYTES] = pk[i];
-  hash_h(generated_sk+KYBER_SECRETKEYBYTES-2*KYBER_SYMBYTES, pk, KYBER_PUBLICKEYBYTES);
-  hash_h(generated_sk+KYBER_SECRETKEYBYTES-KYBER_SYMBYTES, pk+KYBER_POLYVECBYTES, KYBER_SYMBYTES);
-
-  for (i = 0; i < KYBER_SECRETKEYBYTES; ++i)
-  {
-    // printf("%d\n", generated_sk[i]);
-    // printf("%d\n", sk[i]);
-    if (generated_sk[i] != sk[i])
-    {
-      printf("wrong sk%ld\n", i);
-    }
-  }
-  // ---------------------------------- end testing
-
 
   return 0;
 }
-//----------------------------------End-Modified--------------------------------------------
+
+/* ----------------------------------- End ---------------------------------- */
 
 
 /*************************************************
