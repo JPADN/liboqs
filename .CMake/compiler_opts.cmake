@@ -1,7 +1,7 @@
 # SPDX-License-Identifier: MIT
 
 if(CMAKE_C_COMPILER_ID MATCHES "Clang")
-    add_compile_options(-Werror)
+    # add_compile_options(-Werror)
     add_compile_options(-Wall)
     add_compile_options(-Wextra)
     add_compile_options(-Wpedantic)
@@ -54,7 +54,7 @@ if(CMAKE_C_COMPILER_ID MATCHES "Clang")
     endif()
 
 elseif(CMAKE_C_COMPILER_ID STREQUAL "GNU")
-    add_compile_options(-Werror)
+    # add_compile_options(-Werror)
     add_compile_options(-Wall)
     add_compile_options(-Wextra)
     add_compile_options(-Wpedantic)
