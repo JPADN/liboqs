@@ -21,6 +21,7 @@ cd ${OPENSSL_DIR}
 
 cd ${LIBOQS_DIR}/build
 cmake -GNinja -DCMAKE_INSTALL_PREFIX=${OPENSSL_DIR}/oqs ..
+ninja
 ninja install
 
 # ----------------------- Integrating attacked version ----------------------- #
