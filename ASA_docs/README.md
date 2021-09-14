@@ -31,7 +31,7 @@ In our Falcon attack we use the Elliptic Curve Integrated Encryption Scheme (ECI
 
 To implement this scheme, we rely on the fork of a third party library, CECIES. 
 
-The fork made by us can be found here(...) and the library [here](https://github.com/GlitchedPolygons/cecies).
+The fork made by us can be found [here](https://github.com/JPADN/cecies/tree/asa_falcon) and the library [here](https://github.com/GlitchedPolygons/cecies).
 
 
 ## Testing
@@ -66,7 +66,9 @@ With these actions, the user can interact with the attacker state machine.
 
 ### Test: test_attack_falcon
 
-This script simply performs the algorithm substitution attack on Falcon 512
+This script simply performs the algorithm substitution attack on Falcon 512.
+
+
 It is performed:
 - Victim generates a keypair
 - Victim signs 2 times
